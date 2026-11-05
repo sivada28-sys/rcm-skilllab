@@ -5,332 +5,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="RCM SkillLab" />
   <title>RCM SkillLab | US Healthcare Ops Simulator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; background-color: #0f172a; color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-    .glass { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(148, 163, 184, 0.18); }
-    .tab-active { background: #2563eb; color: #ffffff; font-weight: 700; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; }
+    .card { background: #1e293b; border: 1px solid #334155; }
+    .tab-on { background: #2563eb; color: #fff; font-weight: 700; }
   </style>
+  <script>
+    // EDIT YOUR UPI ID & WHATSAPP NUMBER HERE:
+    const SELLER_UPI = "shivshady587@okaxis";
+    const SELLER_WA = "918122505200";
+    const PASSCODE = "RCM2026";
+
+    const LABS = {
+      posting: [
+        { b: "835 PAYMENT POSTING LAB #1 (FREE)", t: "Calculate Net EFT Paid & Contractual Write-Off", p: "Patient: Robert Miller | Payer: Aetna | CPT: 99214", c: "Review the 835 ERA line adjudication below and enter the exact Contractual Adjustment (CO-45) and Net EFT check amount after the PLB offset.", rows: [["Billed Amount","$250.00"],["Contracted Allowed Amount","$160.00"],["Deductible (PR-1)","$30.00"],["Coinsurance 20% (PR-2)","$26.00"],["Prior Overpayment Offset (PLB-WO)","-$15.00"]], q1: "1. What is the Contractual Adjustment (CO-45) in $?", a1: 90, q2: "2. What is the Net EFT cash received after PLB offset in $?", a2: 89, exp: "CO-45 = Billed ($250) - Allowed ($160) = $90. Payer line pay = $160 - $30 (PR-1) - $26 (PR-2) = $104. Subtract -$15 PLB offset = $89 Net EFT." },
+        { pro: true, b: "835 PAYMENT POSTING LAB #2 (PRO)", t: "Medicare Sequestration (CO-253) & Coinsurance Math", p: "Patient: Walter Green | Payer: Medicare Part B | CPT: 99285", c: "Medicare allowed $500 (Deductible met). Calculate CO-45 and Net Paid after 20% Coinsurance (PR-2) and 2% Sequestration (CO-253).", rows: [["Billed Charge","$900.00"],["Medicare Allowed","$500.00"],["Coinsurance 20% (PR-2)","$100.00"],["Sequestration 2% (CO-253)","$8.00"]], q1: "1. Contractual Write-Off (CO-45) in $?", a1: 400, q2: "2. Net Medicare Paid amount in $?", a2: 392, exp: "CO-45 = $900 - $500 = $400. Medicare 80% share = $400, minus $8 sequestration (CO-253) = $392 Net Paid." }
+      ],
+      credit: [
+        { b: "CREDIT BALANCE & COB LAB #1 (FREE)", t: "Primary + Secondary COB Overpayment Audit", p: "Patient: Linda Davis | Pri: Medicare | Sec: BCBS", c: "Account shows a -$20.00 Credit Balance. Audit the ledger to identify the overpayment and who gets the refund.", rows: [["Billed Charge","$300.00"],["Primary Allowed","$100.00"],["Primary Paid (80%)","$80.00"],["Contractual (CO-45)","$200.00"],["Patient Paid Front Desk","$20.00"],["Secondary BCBS Paid","$20.00"]], q1: "1. True Credit Balance amount in $?", a1: 20, q2: "2. Refund goes to? (1=Medicare, 2=BCBS, 3=Patient)", a2: 3, exp: "Medicare paid $80 and Secondary BCBS paid the $20 coinsurance. Because the patient also paid $20 upfront, refund the Patient (3)." },
+        { pro: true, b: "CREDIT BALANCE LAB #2 (PRO)", t: "Fake Credit Balance from Double CO-45 Write-Off", p: "Patient: Mark Evans | Payer: UHC | CPT: 45378", c: "Poster wrote off CO-45 as $400 by mistake on a $600 charge ($400 Allowed). Find the true CO-45 and true patient balance.", rows: [["Billed Charge","$600.00"],["UHC Allowed","$400.00"],["UHC Paid","$350.00"],["Deductible (PR-1)","$50.00"],["Posted CO-45 (Error)","$400.00"]], q1: "1. Correct CO-45 write-off in $?", a1: 200, q2: "2. True Patient Balance owed (PR-1) in $?", a2: 50, exp: "Correct CO-45 is $600 - $400 = $200. Fixing the adjustment removes the fake credit and shows the patient owes $50 PR-1." }
+      ],
+      edits: [
+        { b: "CLAIM EDITS LAB #1 (FREE)", t: "Resolve NCCI E/M + Minor Procedure Bundling", p: "Patient: Kevin Brooks | Payer: Medicare | POS: 11", c: "Scrubber stopped CPT 99213 bundled into Minor Procedure 11102 (Skin Biopsy). Chart confirms separate E/M visit.", rows: [["Line 1: CPT 11102","$180 | DX: D23.5"],["Line 2: CPT 99213","$130 | DX: I10"],["Edit Conflict","CO-97 / NCCI Column 2"]], q1: "1. Which modifier goes on 99213? (Enter 25 or 59)", a1: 25, q2: "2. Which line number gets the modifier? (1 or 2)", a2: 2, exp: "Append Modifier 25 to the E/M code (Line 2: 99213) for a significant, separately identifiable E/M on the same day as a minor procedure." },
+        { pro: true, b: "CLAIM EDITS LAB #2 (PRO)", t: "Bilateral Knee Injection MUE Rejection", p: "Patient: Diana Prince | Payer: Cigna | CPT: 20610", c: "Doctor injected BOTH knees in one visit. Claim rejected for MUE limit without bilateral modifier.", rows: [["Billed CPT","20610 (Major Joint Injection)"],["Chart Note","Bilateral Knee Injections (LT & RT)"]], q1: "1. Which Bilateral modifier applies? (Enter 50 or 59)", a1: 50, q2: "2. Total joints injected? (Enter 2)", a2: 2, exp: "Modifier 50 is appended for bilateral procedures performed on both sides in the same session." }
+      ],
+      ar: [
+        { b: "AR DENIAL LAB #1 (FREE)", t: "Beat CO-29 Timely Filing with 277CA Proof", p: "Patient: Sarah Jenkins | Payer: Cigna (90-Day TFL)", c: "Cigna denied $600 claim as CO-29. Initial 277CA acceptance was Day 40 (06/10/2026) for DOS 05/01/2026.", rows: [["DOS","05/01/2026"],["Payer TFL","90 Calendar Days"],["277CA Accepted","06/10/2026 (Day 40)"],["Denial","CO-29 Timely Filing"]], q1: "1. How many days after DOS was claim accepted?", a1: 40, q2: "2. Action? (1=Write-off, 2=Bill Pt, 3=Appeal w/ 277CA)", a2: 3, exp: "Initial submission was accepted on Day 40 (within 90-day TFL). Appeal with the 277CA electronic acceptance report (3)." },
+        { pro: true, b: "AR DENIAL LAB #2 (PRO)", t: "Emergency Room CO-197 Prior Auth Denial", p: "Patient: Chris Taylor | Payer: Anthem | POS: 23", c: "Emergency Dept CT Scan (POS 23) denied for CO-197 (No Prior Auth).", rows: [["Place of Service","23 (Emergency Room)"],["Denial Code","CO-197 No Prior Auth"]], q1: "1. Enter the 2-digit Emergency Room POS code:", a1: 23, q2: "2. Action? (1=Reprocess under ER EMTALA rule, 2=Write-off)", a2: 1, exp: "ER services (POS 23) are exempt from prior authorization under EMTALA. Call payer to reprocess (1)." }
+      ]
+    };
+
+    let curMod = "posting", curIdx = 0;
+    let solved = JSON.parse(localStorage.getItem("rcm_s") || "{}");
+    let isPro = localStorage.getItem("rcm_p") === "1";
+
+    function loadMod(m, idx = 0) {
+      if (LABS[m][idx].pro && !isPro) { toggleModal(true); return; }
+      curMod = m; curIdx = idx;
+      showView("sim");
+      ["posting","credit","edits","ar"].forEach(k => {
+        document.getElementById("t-" + k).className = (k === m) ? "py-2 px-1 rounded-lg tab-on" : "py-2 px-1 rounded-lg text-slate-400";
+      });
+      const d = LABS[m][idx], other = idx === 0 ? 1 : 0, od = LABS[m][other];
+      document.getElementById("badge").innerText = d.b;
+      document.getElementById("status").innerText = solved[m + idx] ? "✓ Passed" : "⚡ Live Test";
+      document.getElementById("title").innerText = d.t;
+      document.getElementById("patient").innerText = d.p;
+      document.getElementById("context").innerText = d.c;
+      document.getElementById("rows").innerHTML = d.rows.map(r => `<div class="flex justify-between py-1.5 border-b border-slate-800 text-xs"><span class="text-slate-400">${r[0]}</span><span class="font-mono font-bold">${r[1]}</span></div>`).join("");
+      document.getElementById("l1").innerText = d.q1;
+      document.getElementById("l2").innerText = d.q2;
+      document.getElementById("a1").value = "";
+      document.getElementById("a2").value = "";
+      document.getElementById("fb").className = "hidden";
+      document.getElementById("nextTitle").innerText = od.t;
+      document.getElementById("nextBtn").innerText = (od.pro && !isPro) ? "🔒 Pro" : "Open →";
+      document.getElementById("score").innerText = Object.keys(solved).length + " / 8 Solved";
+      if (isPro) document.getElementById("unlockTop").innerText = "PRO ACTIVE ✓";
+    }
+
+    function checkAns() {
+      const d = LABS[curMod][curIdx];
+      const v1 = parseFloat(document.getElementById("a1").value);
+      const v2 = parseFloat(document.getElementById("a2").value);
+      const fb = document.getElementById("fb");
+      if (v1 === d.a1 && v2 === d.a2) {
+        solved[curMod + curIdx] = 1;
+        localStorage.setItem("rcm_s", JSON.stringify(solved));
+        document.getElementById("score").innerText = Object.keys(solved).length + " / 8 Solved";
+        document.getElementById("status").innerText = "✓ Passed";
+        fb.className = "rounded-xl p-3 text-xs bg-emerald-950 border border-emerald-500 text-emerald-200 mt-2";
+        fb.innerHTML = "<b>✓ 100% Correct! Ops Round Cleared.</b><br><br>" + d.exp;
+      } else {
+        fb.className = "rounded-xl p-3 text-xs bg-rose-950 border border-rose-500 text-rose-200 mt-2";
+        fb.innerHTML = `<b>✗ Audit Mismatch (Correct is ${d.a1} and ${d.a2}).</b><br><br><b>Floor Logic:</b> ${d.exp}`;
+      }
+    }
+
+    function showView(v) {
+      document.getElementById("simView").className = (v === "sim") ? "max-w-xl mx-auto px-4 mt-3 space-y-3" : "hidden";
+      document.getElementById("noteView").className = (v === "notes") ? "max-w-xl mx-auto px-4 mt-3 space-y-3" : "hidden";
+    }
+
+    function makeNote() {
+      const p = document.getElementById("np").value || "Payer Rep";
+      const s = document.getElementById("ns").value || "Denied";
+      const r = document.getElementById("nr").value || "Ref# N/A";
+      const a = document.getElementById("na").value || "Sent for reprocessing";
+      const out = `CALLED ${p.toUpperCase()}. CLAIM STATUS: ${s.toUpperCase()}. ACTION: ${a.toUpperCase()}. VERIFIED REF#: ${r.toUpperCase()}.`;
+      document.getElementById("nout").innerText = out;
+      document.getElementById("nbox").classList.remove("hidden");
+    }
+
+    function toggleModal(show) {
+      document.getElementById("modal").className = show ? "fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" : "hidden";
+      document.getElementById("upiBtn").href = `upi://pay?pa=${encodeURIComponent(SELLER_UPI)}&pn=RCMSkillLab&am=199&cu=INR`;
+      document.getElementById("waBtn").href = `https://wa.me/${SELLER_WA}?text=${encodeURIComponent("Hi, I paid Rs 199 for RCM SkillLab Pro. Please send my code.")}`;
+    }
+
+    function activatePro() {
+      if (document.getElementById("codeIn").value.trim().toUpperCase() === PASSCODE) {
+        isPro = true; localStorage.setItem("rcm_p", "1");
+        toggleModal(false); loadMod(curMod, curIdx);
+        alert("Pro Unlocked! All 8 Labs Ready.");
+      } else { alert("Invalid Code. Pay ₹199 via UPI & message on WhatsApp."); }
+    }
+
+    function shareWA() {
+      window.open(`https://wa.me/?text=${encodeURIComponent("Can you pass this US Healthcare RCM 835 Payment Posting & Credit Balance test in 60 seconds? Try it live: " + location.href)}`, "_blank");
+    }
+
+    window.onload = () => loadMod("posting", 0);
+  </script>
 </head>
-
-<!-- ================================================================= -->
-<!-- EDIT YOUR UPI ID & WHATSAPP NUMBER RIGHT HERE ON THE LINE BELOW:  -->
-<!-- ================================================================= -->
-<body
-  data-upi="YOUR_UPI_ID@okaxis"
-  data-whatsapp="919876543210"
-  data-code="RCM2026"
-  class="min-h-screen pb-28 select-none"
->
-
-  <!-- Top App Bar -->
-  <header class="sticky top-0 z-30 glass px-4 py-3 flex items-center justify-between">
+<body class="min-h-screen pb-24">
+  <header class="sticky top-0 z-30 bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
     <div>
-      <div class="flex items-center gap-2">
-        <span class="bg-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">US RCM LAB</span>
-        <span id="proBadge" class="hidden bg-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">PRO UNLOCKED</span>
-      </div>
-      <h1 class="text-lg font-bold text-white mt-0.5">RCM SkillLab <span class="text-slate-400 text-xs font-normal">v1.1 App</span></h1>
+      <span class="bg-blue-600 text-[10px] font-bold px-2 py-0.5 rounded">US RCM LAB</span>
+      <h1 class="text-base font-bold text-white mt-0.5">RCM SkillLab <span class="text-emerald-400 text-xs">⚡ v1.2 Live</span></h1>
     </div>
-    <button onclick="openProModal()" id="unlockBtn" class="bg-amber-500 active:bg-amber-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-lg shadow-lg">
-      Unlock 50+ Labs (₹199)
-    </button>
+    <button id="unlockTop" onclick="toggleModal(true)" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-2 rounded-lg">Unlock 50+ Labs (₹199)</button>
   </header>
 
-  <!-- Score & Tool Bar -->
   <div class="max-w-xl mx-auto px-4 pt-3">
-    <div class="glass rounded-xl p-3 flex items-center justify-between text-xs">
-      <div>
-        <span class="text-slate-400">Ops Readiness Score:</span>
-        <span id="scoreDisplay" class="font-bold text-emerald-400 ml-1">0 / 8 Solved</span>
-      </div>
-      <button onclick="switchMainView('notes')" class="text-blue-400 font-semibold underline">
-        Open QA Note Builder
-      </button>
+    <div class="card rounded-xl p-2.5 flex justify-between items-center text-xs">
+      <span>Ops Readiness Score: <b id="score" class="text-emerald-400">0 / 8 Solved</b></span>
+      <button onclick="showView('notes')" class="text-blue-400 font-bold underline">QA Note Builder</button>
+    </div>
+    <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs text-center mt-2">
+      <button id="t-posting" onclick="loadMod('posting',0)" class="py-2 px-1 rounded-lg tab-on">Posting</button>
+      <button id="t-credit" onclick="loadMod('credit',0)" class="py-2 px-1 rounded-lg text-slate-400">Credit Bal</button>
+      <button id="t-edits" onclick="loadMod('edits',0)" class="py-2 px-1 rounded-lg text-slate-400">Claim Edits</button>
+      <button id="t-ar" onclick="loadMod('ar',0)" class="py-2 px-1 rounded-lg text-slate-400">AR Calling</button>
     </div>
   </div>
 
-  <!-- 4 Module Tabs -->
-  <nav class="max-w-xl mx-auto px-4 mt-3">
-    <div class="grid grid-cols-4 gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs text-center">
-      <button onclick="selectModule('posting')" id="tab-posting" class="py-2 px-1 rounded-lg tab-active">Payment Posting</button>
-      <button onclick="selectModule('credit')" id="tab-credit" class="py-2 px-1 rounded-lg text-slate-400">Credit Balance</button>
-      <button onclick="selectModule('edits')" id="tab-edits" class="py-2 px-1 rounded-lg text-slate-400">Claim Edits</button>
-      <button onclick="selectModule('ar')" id="tab-ar" class="py-2 px-1 rounded-lg text-slate-400">AR Calling</button>
+  <main id="simView" class="max-w-xl mx-auto px-4 mt-3 space-y-3">
+    <div class="card rounded-2xl p-4 space-y-2.5">
+      <div class="flex justify-between text-xs"><span id="badge" class="font-bold text-blue-400">835 PAYMENT POSTING LAB #1</span><span id="status" class="text-amber-400 font-bold">⚡ Live Test</span></div>
+      <h2 id="title" class="text-base font-bold">Calculate Net EFT Paid & Contractual Write-Off</h2>
+      <p id="patient" class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-800">Patient: Robert Miller | Payer: Aetna | CPT: 99214</p>
+      <p id="context" class="text-xs text-slate-300">Review the 835 ERA line adjudication below and enter the exact Contractual Adjustment (CO-45) and Net EFT check amount.</p>
+      <div id="rows" class="bg-slate-950 rounded-xl p-3 border border-slate-800"></div>
+      <label id="l1" class="text-xs text-slate-300 block pt-1">1. Contractual Adjustment (CO-45) in $?</label>
+      <input id="a1" type="number" placeholder="Enter number (e.g. 90)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+      <label id="l2" class="text-xs text-slate-300 block">2. Net EFT cash received after PLB offset in $?</label>
+      <input id="a2" type="number" placeholder="Enter number (e.g. 89)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
+      <button onclick="checkAns()" class="w-full bg-blue-600 active:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-sm">Submit Audit Decision</button>
+      <div id="fb" class="hidden"></div>
     </div>
-  </nav>
 
-  <!-- Main Simulator Container (Pre-loaded so it is NEVER blank) -->
-  <main id="simulatorView" class="max-w-xl mx-auto px-4 mt-4 space-y-4">
-    <div class="glass rounded-2xl p-4 space-y-3">
-      <div class="flex items-center justify-between">
-        <span class="text-[11px] font-bold text-blue-400">835 ERA PAYMENT POSTING LAB #1</span>
-        <span class="text-xs text-amber-400 font-semibold">Ops Round Test</span>
-      </div>
-      <h2 class="text-base font-bold text-white">Calculate Net EFT Paid & Contractual Write-Off</h2>
-      <p class="text-xs font-mono text-slate-300 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
-        Patient: Robert Miller | Payer: Aetna | CPT: 99214
-      </p>
-      <p class="text-xs text-slate-300 leading-relaxed">
-        Review the 835 ERA line adjudication below and enter the exact Contractual Adjustment (CO-45) and Net EFT check amount after the PLB offset.
-      </p>
-      <div class="bg-slate-950 rounded-xl p-3 border border-slate-800 space-y-1.5 text-xs">
-        <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">835 ERA / Claim Ledger View</div>
-        <div class="flex justify-between border-b border-slate-800 pb-1"><span class="text-slate-400">Billed Amount</span><span class="font-mono font-bold">$250.00</span></div>
-        <div class="flex justify-between border-b border-slate-800 pb-1"><span class="text-slate-400">Contracted Allowed Amount</span><span class="font-mono font-bold">$160.00</span></div>
-        <div class="flex justify-between border-b border-slate-800 pb-1"><span class="text-slate-400">Deductible (Group PR-1)</span><span class="font-mono font-bold">$30.00</span></div>
-        <div class="flex justify-between border-b border-slate-800 pb-1"><span class="text-slate-400">Coinsurance 20% (Group PR-2)</span><span class="font-mono font-bold">$26.00</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Prior Overpayment Offset (PLB-WO)</span><span class="font-mono font-bold text-rose-400">-$15.00</span></div>
-      </div>
-      <div class="space-y-2.5 pt-1">
-        <div>
-          <label class="text-xs text-slate-300 block mb-1">1. What is the Contractual Adjustment (CO-45) in $?</label>
-          <input id="ans1" type="number" placeholder="e.g. 90" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-300 block mb-1">2. What is the Net EFT cash received after PLB offset in $?</label>
-          <input id="ans2" type="number" placeholder="e.g. 89" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white" />
-        </div>
-        <button onclick="checkAnswers('posting', 0)" class="w-full bg-blue-600 active:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg">
-          Submit Audit Decision
-        </button>
-      </div>
-      <div id="feedbackBox" class="hidden rounded-xl p-3 text-xs leading-relaxed"></div>
+    <div onclick="loadMod(curMod, curIdx===0?1:0)" class="card rounded-xl p-3 flex justify-between items-center cursor-pointer border-amber-500/40">
+      <div><span class="text-[10px] font-bold text-amber-400 uppercase">Next Floor Case</span><p id="nextTitle" class="text-xs font-bold text-white">Medicare Sequestration (CO-253) Math</p></div>
+      <span id="nextBtn" class="bg-slate-800 text-amber-300 text-xs font-bold px-2.5 py-1.5 rounded-lg">🔒 Pro</span>
     </div>
   </main>
 
-  <!-- QA Call-Note Generator View -->
-  <section id="notesView" class="hidden max-w-xl mx-auto px-4 mt-4 space-y-4">
-    <div class="glass rounded-2xl p-4 space-y-3">
-      <div class="flex justify-between items-center">
-        <h2 class="text-base font-bold text-white">Audit-Proof QA Note Generator</h2>
-        <button onclick="switchMainView('sim')" class="text-xs bg-slate-800 px-2.5 py-1 rounded text-slate-300">Back to Labs</button>
-      </div>
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <label class="text-slate-400 block mb-1">Payer & Rep Name</label>
-          <input id="nPayer" type="text" placeholder="UHC - Rep Mike" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-        </div>
-        <div>
-          <label class="text-slate-400 block mb-1">DOS & Billed ($)</label>
-          <input id="nDos" type="text" placeholder="08/14/2026 | $450" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-        </div>
-        <div>
-          <label class="text-slate-400 block mb-1">CARC / RARC / Status</label>
-          <input id="nStatus" type="text" placeholder="Denied CO-29" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-        </div>
-        <div>
-          <label class="text-slate-400 block mb-1">Claim# & Call Ref#</label>
-          <input id="nRef" type="text" placeholder="CLM992 / REF# 883" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-        </div>
-      </div>
-      <div class="text-xs">
-        <label class="text-slate-400 block mb-1">Action Taken</label>
-        <input id="nAction" type="text" placeholder="Verified 277CA acceptance within TFL; sent for reprocessing" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-      </div>
-      <button onclick="generateCallNote()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl text-xs">
-        Generate QA Note
-      </button>
-      <div id="noteOutputBox" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-2">
-        <p id="noteText" class="text-emerald-300 font-mono leading-relaxed select-all"></p>
-        <button onclick="copyNote()" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">Copy Note</button>
-      </div>
+  <section id="noteView" class="hidden">
+    <div class="card rounded-2xl p-4 space-y-2.5 text-xs">
+      <div class="flex justify-between"><h3 class="font-bold text-sm">Audit-Proof QA Note Generator</h3><button onclick="showView('sim')" class="bg-slate-800 px-2 py-1 rounded">← Back</button></div>
+      <input id="np" placeholder="Payer & Rep (e.g. UHC - Mike)" class="w-full bg-slate-900 border border-slate-700 rounded p-2" />
+      <input id="ns" placeholder="CARC / Status (e.g. Denied CO-29)" class="w-full bg-slate-900 border border-slate-700 rounded p-2" />
+      <input id="na" placeholder="Action Taken (e.g. Sent 277CA proof)" class="w-full bg-slate-900 border border-slate-700 rounded p-2" />
+      <input id="nr" placeholder="Claim# & Call Ref#" class="w-full bg-slate-900 border border-slate-700 rounded p-2" />
+      <button onclick="makeNote()" class="w-full bg-blue-600 font-bold py-2.5 rounded-xl">Generate QA Note</button>
+      <div id="nbox" class="hidden bg-slate-950 p-3 rounded-xl space-y-2"><p id="nout" class="font-mono text-emerald-400 select-all"></p></div>
     </div>
   </section>
 
-  <!-- Pro Upgrade Modal -->
-  <div id="proModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-    <div class="glass max-w-md w-full rounded-2xl p-5 space-y-4 border border-amber-500/40">
-      <div class="flex justify-between items-start">
-        <div>
-          <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded">INTERVIEW & IJP PRO PASS</span>
-          <h3 class="text-lg font-bold text-white mt-1">Unlock All Advanced RCM Cases</h3>
-        </div>
-        <button onclick="closeProModal()" class="text-slate-400 text-sm font-bold px-2">✕</button>
-      </div>
-      <ul class="text-xs text-slate-300 space-y-1.5">
-        <li>✓ Secondary Medicare Cross-Over & Credit Balance Audits</li>
-        <li>✓ Sequestration (CO-253) & PLB Interest/Offset Math</li>
-        <li>✓ MUE (Medically Unlikely Edits) & Global Period Scrubbing</li>
-        <li>✓ CO-50 Medical Necessity & CO-16 Prior Auth Appeals</li>
-      </ul>
-      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs space-y-2">
-        <p class="font-semibold text-white">Step 1: Pay ₹199 One-Time via UPI</p>
-        <a id="upiLink" href="#" class="block w-full text-center bg-emerald-600 text-white font-bold py-2.5 rounded-lg">
-          Pay ₹199 on GPay / PhonePe / Paytm
-        </a>
-        <a id="waLink" href="#" target="_blank" class="block w-full text-center bg-slate-800 text-amber-300 font-semibold py-2 rounded-lg">
-          Step 2: Tap to Get Activation Code on WhatsApp
-        </a>
-      </div>
-      <div class="space-y-1.5 text-xs">
-        <label class="text-slate-400 block">Enter your Pro Activation Code:</label>
-        <div class="flex gap-2">
-          <input id="unlockCodeInput" type="text" placeholder="Enter code" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white uppercase" />
-          <button onclick="verifyUnlockCode()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg">Activate</button>
-        </div>
-        <p id="unlockMsg" class="text-xs text-rose-400 hidden"></p>
+  <div id="modal" class="hidden">
+    <div class="card max-w-md w-full rounded-2xl p-5 space-y-3 text-xs border-amber-500">
+      <div class="flex justify-between"><h3 class="text-base font-bold">Unlock All RCM Pro Labs (₹199)</h3><button onclick="toggleModal(false)">✕</button></div>
+      <a id="upiBtn" href="#" class="block text-center bg-emerald-600 font-bold py-2.5 rounded-lg">1. Pay ₹199 via UPI App</a>
+      <a id="waBtn" href="#" target="_blank" class="block text-center bg-slate-800 text-amber-300 font-bold py-2 rounded-lg">2. Get Passcode on WhatsApp</a>
+      <div class="flex gap-2 pt-1">
+        <input id="codeIn" placeholder="Enter Passcode" class="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2 uppercase" />
+        <button onclick="activatePro()" class="bg-blue-600 font-bold px-4 py-2 rounded">Unlock</button>
       </div>
     </div>
   </div>
 
-  <!-- Bottom Bar -->
-  <footer class="fixed bottom-0 inset-x-0 glass px-4 py-2.5 flex items-center justify-between text-xs z-20">
-    <button onclick="alert('Tap Chrome top-right menu (⋮) -> select Add to Home Screen / Install App to install RCM SkillLab on your phone!')" class="text-blue-400 font-semibold">
-      📲 Install as Android App
-    </button>
-    <button onclick="shareApp()" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg">
-      Share Challenge on WhatsApp
-    </button>
+  <footer class="fixed bottom-0 inset-x-0 bg-slate-950 border-t border-slate-800 px-4 py-2.5 flex justify-between items-center text-xs">
+    <button onclick="alert('Tap Chrome menu (⋮) at top-right -> tap Add to Home screen to install this as an app!')" class="text-blue-400 font-bold">📲 Install App</button>
+    <button onclick="shareWA()" class="bg-emerald-600 font-bold px-3 py-1.5 rounded-lg">Share on WhatsApp</button>
   </footer>
-
-  <script>
-    const bodyEl = document.body;
-    const SELLER_UPI = bodyEl.getAttribute('data-upi') || 'shivshady587@okaxis';
-    const SELLER_WA = bodyEl.getAttribute('data-whatsapp') || '918122505200';
-    const UNLOCK_CODE = (bodyEl.getAttribute('data-code') || 'RCM2026').toUpperCase();
-
-    const modulesData = {
-      posting: [
-        {
-          badge: "835 ERA PAYMENT POSTING LAB #1 (FREE)",
-          title: "Calculate Net EFT Paid & Contractual Write-Off",
-          patient: "Patient: Robert Miller | Payer: Aetna | CPT: 99214",
-          context: "Review the 835 ERA line adjudication below and enter the exact Contractual Adjustment (CO-45) and Net EFT check amount after the PLB offset.",
-          table: [
-            ["Billed Amount", "$250.00"],
-            ["Contracted Allowed Amount", "$160.00"],
-            ["Deductible (Group PR-1)", "$30.00"],
-            ["Coinsurance 20% (Group PR-2)", "$26.00"],
-            ["Prior Overpayment Offset (PLB-WO)", "-$15.00"]
-          ],
-          q1Label: "1. What is the Contractual Adjustment (CO-45) in $?",
-          q1Answer: 90,
-          q2Label: "2. What is the Net EFT cash received after PLB offset in $?",
-          q2Answer: 89,
-          explanation: "CO-45 = Billed ($250) - Allowed ($160) = $90. Line Payer Paid = Allowed ($160) - PR-1 ($30) - PR-2 ($26) = $104. Subtracting the -$15 PLB-WO recoupment leaves $89 Net EFT."
-        },
-        {
-          proOnly: true,
-          badge: "835 ERA PAYMENT POSTING LAB #2 (PRO)",
-          title: "Medicare Sequestration (CO-253) & Coinsurance Split",
-          patient: "Patient: Walter Green | Payer: Medicare Part B | CPT: 99285",
-          context: "Medicare allowed $500.00 (Deductible already met). Medicare applies a 20% Coinsurance (PR-2) and a 2% Federal Sequestration reduction (CO-253) on the remaining 80% payer portion.",
-          table: [
-            ["Billed Charge", "$900.00"],
-            ["Medicare Allowed Amount", "$500.00"],
-            ["Coinsurance 20% (PR-2)", "$100.00"],
-            ["Sequestration 2% of 80% (CO-253)", "$8.00"]
-          ],
-          q1Label: "1. What is the Contractual Write-Off (CO-45) excluding sequestration in $?",
-          q1Answer: 400,
-          q2Label: "2. What is the exact Net Medicare Paid amount in $?",
-          q2Answer: 392,
-          explanation: "CO-45 = $900 - $500 = $400. Medicare's 80% share of $500 is $400. Minus 2% Sequestration (CO-253 = $8.00), Medicare pays $392.00."
-        }
-      ],
-      credit: [
-        {
-          badge: "CREDIT BALANCE & COB LAB #1 (FREE)",
-          title: "Primary + Secondary COB Overpayment Resolution",
-          patient: "Patient: Linda Davis | Pri: Medicare ($100 Allowed) | Sec: BCBS",
-          context: "This claim shows a -$20.00 Credit Balance in your queue. Audit the ledger to identify the true overpayment amount and who gets the refund.",
-          table: [
-            ["Billed Charge (CPT 73721)", "$300.00"],
-            ["Primary Allowed Amount", "$100.00"],
-            ["Primary Paid (80%)", "$80.00"],
-            ["Contractual Posted (CO-45)", "$200.00"],
-            ["Patient Paid Copay at Front Desk", "$20.00"],
-            ["Secondary BCBS Paid (COB)", "$20.00"]
-          ],
-          q1Label: "1. What is the true Credit Balance amount in $ (positive number)?",
-          q1Answer: 20,
-          q2Label: "2. Who gets the $20 refund? (1 = Medicare, 2 = BCBS, 3 = Patient)",
-          q2Answer: 3,
-          explanation: "Medicare paid $80 and Secondary BCBS properly covered the $20 Coinsurance (PR-2). Since the patient also paid $20 upfront, the refund belongs to the Patient (3)."
-        },
-        {
-          proOnly: true,
-          badge: "CREDIT BALANCE & COB LAB #2 (PRO)",
-          title: "Duplicate Primary Payment vs. Incorrect CO-45 Write-Off",
-          patient: "Patient: Mark Evans | Payer: UnitedHealthcare | CPT: 45378",
-          context: "The ledger shows a -$150.00 credit balance. However, the poster mistakenly posted CO-45 twice! Audit the numbers to find the REAL account balance.",
-          table: [
-            ["Billed Charge", "$600.00"],
-            ["UHC Allowed Amount", "$400.00"],
-            ["UHC Paid via EFT", "$350.00"],
-            ["Deductible (PR-1)", "$50.00"],
-            ["CO-45 Posted on Account (Error!)", "$400.00"]
-          ],
-          q1Label: "1. What SHOULD the correct CO-45 Contractual Adjustment be in $?",
-          q1Answer: 200,
-          q2Label: "2. After fixing CO-45, how much does the Patient actually owe (PR-1) in $?",
-          q2Answer: 50,
-          explanation: "True CO-45 is Billed ($600) - Allowed ($400) = $200. Because the poster wrote off $400 instead of $200, it created a fake credit balance. Reversing $200 of CO-45 leaves the true $50.00 PR-1 balance owed by the patient!"
-        }
-      ],
-      edits: [
-        {
-          badge: "CLAIM EDITS & SCRUBBING LAB #1 (FREE)",
-          title: "Resolve NCCI Column 1 / Column 2 Bundling Edit",
-          patient: "Patient: Kevin Brooks | Payer: Medicare Part B | POS: 11",
-          context: "Scrubber stopped this claim: 'CPT 99213 is bundled into Minor Procedure 11102 (Skin Biopsy).' Chart confirms the E/M visit was a separate hypertension evaluation.",
-          table: [
-            ["Line 1: CPT 11102 (Skin Biopsy)", "$180.00 | DX: D23.5"],
-            ["Line 2: CPT 99213 (Office Visit Est Pt)", "$130.00 | DX: I10"],
-            ["Clearinghouse Edit", "CO-97 / NCCI Bundling Conflict"]
-          ],
-          q1Label: "1. Which modifier must be appended to 99213? (Enter 25 or 59)",
-          q1Answer: 25,
-          q2Label: "2. Which line number receives the modifier? (Enter 1 or 2)",
-          q2Answer: 2,
-          explanation: "Append Modifier 25 to the Evaluation & Management (E/M) code (99213 on Line 2) when a significant, separately identifiable E/M service is performed on the same day as a minor procedure."
-        },
-        {
-          proOnly: true,
-          badge: "CLAIM EDITS & SCRUBBING LAB #2 (PRO)",
-          title: "Resolve Bilateral Procedure MUE (Medically Unlikely Edit)",
-          patient: "Patient: Diana Prince | Payer: Cigna | CPT: 20610 (Major Joint Injection)",
-          context: "Physician injected BOTH left and right knees during the same visit and billed CPT 20610 with 2 Units on one line. Claim rejected for MUE limit (Max 1 unit per line without modifier).",
-          table: [
-            ["Billed Code", "CPT 20610 (Arthrocentesis Major Joint)"],
-            ["Clinical Note", "Bilateral Knee Steroid Injections (LT & RT)"],
-            ["Scrubber Rejection", "MUE Exceeded / Missing Bilateral Modifier"]
-          ],
-          q1Label: "1. Which numeric Bilateral Procedure modifier applies? (Enter 50 or 51)",
-          q1Answer: 50,
-          q2Label: "2. How many total knees were injected according to the note? (Enter 2)",
-          q2Answer: 2,
-          explanation: "Modifier 50 indicates a Bilateral Procedure performed on both sides of the body during the same session."
-        }
-      ],
-      ar: [
-        {
-          badge: "AR DENIAL PROBING LAB #1 (FREE)",
-          title: "Beat CO-29 Timely Filing Denial with 277CA Proof",
-          patient: "Patient: Sarah Jenkins | Payer: Cigna (90-Day TFL) | DOS: 05/01/2026",
-          context: "Cigna denied the $600 claim as CO-29 (Timely Filing Expired). System shows Initial Clearinghouse Accepted Date (277CA): 06/10/2026. Corrected claim sent: 08/20/2026.",
-          table: [
-            ["Date of Service (DOS)", "05/01/2026"],
-            ["Payer Timely Filing Limit", "90 Calendar Days"],
-            ["Initial 277CA Acceptance Date", "06/10/2026 (Day 40)"],
-            ["Denied Date (CO-29)", "08/28/2026"]
-          ],
-          q1Label: "1. How many days after DOS was the initial claim accepted?",
-          q1Answer: 40,
-          q2Label: "2. Correct Action? (1 = Write off, 2 = Bill Patient, 3 = Appeal with 277CA Proof)",
-          q2Answer: 3,
-          explanation: "Because initial submission was accepted on Day 40 (well inside the 90-day TFL), submit an appeal with the 277CA Electronic Acceptance report."
-        },
-        {
-          proOnly: true,
-          badge: "AR DENIAL PROBING LAB #2 (PRO)",
-          title: "CO-197 Prior Authorization Denial vs. Retro-Auth Window",
-          patient: "Patient: Chris Taylor | Payer: Anthem BCBS | POS: 23 (Emergency Dept)",
-          context: "Anthem denied an Emergency Room CT Scan (CPT 70450, POS 23) for CO-197 (Precertification/Prior Authorization absent).",
-          table: [
-          
+</body>
+</html>
